@@ -72,13 +72,19 @@ export default function LoginPage() {
     }
   };
 
+
+
+
+
+
+
   const handleGoogle = async () => {
     setErrorMessage("");
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
 
-      // ✅ Store to Firestore
+      // Store to Firestore
       await addUserToFirestore(user);
 
       router.push("/profile");
@@ -86,6 +92,14 @@ export default function LoginPage() {
       setErrorMessage(err.message);
     }
   };
+
+
+
+
+
+
+
+
 
 
   return (

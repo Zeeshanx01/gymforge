@@ -30,6 +30,8 @@ export default function Profile() {
     }
   };
 
+  // console.log('User:', user);
+  // console.log('User:', user.photoURL);
   if (!user) {
     return (
       <main className="min-h-screen bg-gray-950 text-gray-100 px-6 py-12">
@@ -43,33 +45,64 @@ export default function Profile() {
   return (
     <main className="min-h-screen bg-gray-950 text-gray-100 px-6 py-12">
       <section className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl sm:text-4xl font-bold">Your Profile</h1>
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
+          <div>
+            <h1 className="text-4xl font-bold">Your Profile</h1>
+            <p className="text-gray-400 mt-1">Manage your account and personal settings.</p>
+          </div>
           <button
             onClick={handleLogout}
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+            className="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-md transition-all duration-200"
           >
             Logout
           </button>
         </div>
 
-        <p className="text-gray-400 mb-4">Manage your account and personal settings.</p>
+        <div className="bg-gray-900 border border-gray-700 rounded-lg p-6 space-y-6 shadow-md">
+          {/* Profile Image and Basic Info */}
+          <div className="flex items-center gap-5">
+            {user.photoURL ? (
+              <img
+                src={user.photoURL}
+                alt="Profile"
+                className="w-24 h-24 rounded-full border-2 border-gray-700 shadow"
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-full bg-gray-800 flex items-center justify-center text-sm text-gray-500">
+                No Photo
+              </div>
+            )}
+            <div>
+              <h2 className="text-2xl font-semibold">{user.displayName || 'No display name'}</h2>
+              <p className="text-gray-400">{user.email}</p>
+            </div>
+          </div>
 
-        <div className="space-y-4">
-          <div className="bg-gray-900 border border-gray-700 p-4 rounded-lg">
-            <h2 className="text-xl font-semibold mb-2">Display Name</h2>
-            <p className="text-gray-400">{user.displayName || 'Not provided'}</p>
-          </div>
-          <div className="bg-gray-900 border border-gray-700 p-4 rounded-lg">
-            <h2 className="text-xl font-semibold mb-2">Email</h2>
-            <p className="text-gray-400">{user.email}</p>
-          </div>
-          <div className="bg-gray-900 border border-gray-700 p-4 rounded-lg">
-            <h2 className="text-xl font-semibold mb-2">User ID (UID)</h2>
-            <p className="text-gray-400">{user.uid}</p>
+          {/* More Details */}
+          <div className="grid sm:grid-cols-2 gap-6">
+            <div>
+              <h3 className="text-lg font-medium mb-1">User ID (UID)</h3>
+              <p className="text-gray-400 break-all">{user.uid}</p>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-medium mb-1">Email Verified</h3>
+              <p className="text-gray-400">{user.emailVerified ? 'Yes' : 'No'}</p>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-medium mb-1">Account Created</h3>
+              <p className="text-gray-400">{user.metadata?.creationTime || 'N/A'}</p>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-medium mb-1">Last Sign-in</h3>
+              <p className="text-gray-400">{user.metadata?.lastSignInTime || 'N/A'}</p>
+            </div>
           </div>
         </div>
       </section>
     </main>
+
   );
 }
