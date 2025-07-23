@@ -40,7 +40,7 @@ export default function Profile() {
       <ProtectedRoute>
         <main className="min-h-screen bg-gray-950 text-gray-100 px-6 py-12">
           <section className="max-w-4xl mx-auto text-center">
-            <h1 className="text-2xl font-semibold">You are not logged in</h1>
+            <h1 className="text-2xl font-semibold">Please wait...</h1>
           </section>
         </main>
       </ProtectedRoute>
