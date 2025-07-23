@@ -4,16 +4,17 @@ import { useEffect, useState } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase'; // make sure this path is correct
 import { useRouter } from 'next/navigation';
-
+import Image from 'next/image';
 import ProtectedRoute from '@/components/ProtectedRoute'
 export default function Profile() {
   const [user, setUser] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        setUser(firebaseUser);
+        await firebaseUser.reload(); // force refresh from Firebase
+        setUser(auth.currentUser);   // set the latest user
       } else {
         setUser(null);
       }
@@ -21,6 +22,7 @@ export default function Profile() {
 
     return () => unsubscribe();
   }, []);
+
 
   const handleLogout = async () => {
     try {
@@ -38,7 +40,7 @@ export default function Profile() {
       <ProtectedRoute>
         <main className="min-h-screen bg-gray-950 text-gray-100 px-6 py-12">
           <section className="max-w-4xl mx-auto text-center">
-            <h1 className="text-2xl font-semibold">You are not logged in</h1>
+            <h1 className="text-2xl font-semibold">Please wait...</h1>
           </section>
         </main>
       </ProtectedRoute>
@@ -66,11 +68,14 @@ export default function Profile() {
             {/* Profile Image and Basic Info */}
             <div className="flex items-center gap-5">
               {user.photoURL ? (
-                <img
-                  src={user.photoURL}
+                <Image
+                  src={user.photoURL || '/default-avatar.png'}
                   alt="Profile"
-                  className="w-24 h-24 rounded-full border-2 border-gray-700 shadow"
+                  width={96}
+                  height={96}
+                  className="rounded-full border-2 border-gray-700 shadow"
                 />
+
               ) : (
                 <div className="w-24 h-24 rounded-full bg-gray-800 flex items-center justify-center text-sm text-gray-500">
                   No Photo
