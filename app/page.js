@@ -11,9 +11,11 @@ export default function Home() {
           Forge your body. Track your progress. Stay consistent.
         </p>
         <div className="flex justify-center gap-4">
+          <Link href="/login" className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition">
           <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition">
             Get Started
           </button>
+          </Link>
           <button className="border border-gray-500 hover:border-gray-300 text-gray-300 hover:text-white px-6 py-3 rounded-lg transition">
             Learn More
           </button>
