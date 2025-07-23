@@ -1,13 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { auth, googleProvider } from "@/lib/firebase";
+import { addUserToFirestore } from "@/lib/addUserToFirestore";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
+  onAuthStateChanged,
 } from "firebase/auth";
+
+const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.split(",") || [];
 
 export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -15,8 +19,22 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
   const router = useRouter();
+
+  // 🔁 Redirect if already logged in
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const isAdmin = adminEmails.includes(user.email || "");
+        router.push(isAdmin ? "/admin" : "/profile");
+      } else {
+        setCheckingAuth(false);
+      }
+    });
+    return () => unsubscribe();
+  }, [router]);
 
   const isPasswordStrong = (pass) => {
     return (
@@ -32,8 +50,10 @@ export default function LoginPage() {
     setErrorMessage("");
 
     try {
+      let userCredential;
+
       if (isLogin) {
-        await signInWithEmailAndPassword(auth, email, password);
+        userCredential = await signInWithEmailAndPassword(auth, email, password);
       } else {
         if (!isPasswordStrong(password)) {
           setErrorMessage(
@@ -41,9 +61,14 @@ export default function LoginPage() {
           );
           return;
         }
-        await createUserWithEmailAndPassword(auth, email, password);
+        userCredential = await createUserWithEmailAndPassword(auth, email, password);
       }
-      router.push("/dashboard");
+
+      const user = userCredential.user;
+      await addUserToFirestore(user);
+
+      const isAdmin = adminEmails.includes(user.email || "");
+      router.push(isAdmin ? "/admin" : "/profile");
     } catch (err) {
       if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
         setErrorMessage("Incorrect email or password.");
@@ -60,12 +85,19 @@ export default function LoginPage() {
   const handleGoogle = async () => {
     setErrorMessage("");
     try {
-      await signInWithPopup(auth, googleProvider);
-      router.push("/dashboard");
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+
+      await addUserToFirestore(user);
+
+      const isAdmin = adminEmails.includes(user.email || "");
+      router.push(isAdmin ? "/admin" : "/profile");
     } catch (err) {
       setErrorMessage(err.message);
     }
   };
+
+  if (checkingAuth) return null; // prevent UI flicker if already logged in
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-stone-900 text-white">
