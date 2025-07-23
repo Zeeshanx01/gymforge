@@ -134,8 +134,25 @@ export default function AdminPage() {
       {/* Users List */}
       <div className="bg-stone-900 text-white p-4 rounded space-y-4">
         <p><strong>Welcome Message:</strong> Welcome to the Admin Panel!</p>
+
+
         {loading ? (
-          <p>Loading users...</p>
+          <div className="space-y-4">
+            {[...Array(3)].map((_, index) => (
+              <div
+                key={index}
+                className="border border-white/20 rounded p-4 space-y-2 animate-pulse bg-stone-800"
+              >
+                <div className="h-4 bg-white/30 rounded w-1/2"></div>
+                <div className="h-4 bg-white/20 rounded w-3/4"></div>
+                <div className="h-4 bg-white/10 rounded w-2/3"></div>
+                <div className="flex space-x-2 mt-2">
+                  <div className="h-8 w-20 bg-yellow-600/50 rounded"></div>
+                  <div className="h-8 w-20 bg-red-600/50 rounded"></div>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : users.length > 0 ? (
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">All Users:</h2>
@@ -168,6 +185,10 @@ export default function AdminPage() {
         ) : (
           <p>No users found.</p>
         )}
+
+
+
+
       </div>
     </main>
   );
