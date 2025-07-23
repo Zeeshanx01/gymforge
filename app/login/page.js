@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { auth, googleProvider } from "@/lib/firebase";
+import { addUserToFirestore } from '@/lib/addUserToFirestore';
+
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -31,9 +33,13 @@ export default function LoginPage() {
     e.preventDefault();
     setErrorMessage("");
 
+
+
     try {
+      let userCredential;
+
       if (isLogin) {
-        await signInWithEmailAndPassword(auth, email, password);
+        userCredential = await signInWithEmailAndPassword(auth, email, password);
       } else {
         if (!isPasswordStrong(password)) {
           setErrorMessage(
@@ -41,9 +47,18 @@ export default function LoginPage() {
           );
           return;
         }
-        await createUserWithEmailAndPassword(auth, email, password);
+        userCredential = await createUserWithEmailAndPassword(auth, email, password);
       }
-      router.push("/dashboard");
+
+      const user = userCredential.user;
+
+      // ✅ Store to Firestore
+      await addUserToFirestore(user);
+
+
+
+
+      router.push("/profile");
     } catch (err) {
       if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
         setErrorMessage("Incorrect email or password.");
@@ -60,12 +75,18 @@ export default function LoginPage() {
   const handleGoogle = async () => {
     setErrorMessage("");
     try {
-      await signInWithPopup(auth, googleProvider);
-      router.push("/dashboard");
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+
+      // ✅ Store to Firestore
+      await addUserToFirestore(user);
+
+      router.push("/profile");
     } catch (err) {
       setErrorMessage(err.message);
     }
   };
+
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-stone-900 text-white">
