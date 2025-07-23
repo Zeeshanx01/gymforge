@@ -18,7 +18,7 @@ export default function AboutPage() {
         <h2 className="text-2xl font-semibold mb-3">Our Mission</h2>
         <p className="text-zinc-400">
           GymForge exists to simplify your fitness tracking, help you stay consistent,
-          and empower your body transformation journey—whether you're a beginner or an athlete.
+          and empower your body transformation journey—whether you&apos;re a beginner or an athlete.
         </p>
       </section>
 
