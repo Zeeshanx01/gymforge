@@ -1,6 +1,5 @@
 'use client'
-import Image from 'next/image'
-
+import Link from "next/link"
 export default function Home() {
   return (
     <main className="min-h-screen bg-gray-950 text-gray-100 px-6 py-12">
@@ -12,9 +11,11 @@ export default function Home() {
           Forge your body. Track your progress. Stay consistent.
         </p>
         <div className="flex justify-center gap-4">
+          <Link href="/login" className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition">
           <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition">
             Get Started
           </button>
+          </Link>
           <button className="border border-gray-500 hover:border-gray-300 text-gray-300 hover:text-white px-6 py-3 rounded-lg transition">
             Learn More
           </button>

@@ -2,8 +2,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import NextTopLoader from 'nextjs-toploader';
 
+// import Navbar from "@/components/Navbar";
 import Navbar from "@/components/Navbar";
-
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
