@@ -28,27 +28,45 @@ export default function Navbar() {
 
         {/* Desktop Menu */}
         <div className="hidden space-x-6 sm:flex">
+
+          <Link
+            className={`transition font-medium hover:text-blue-400 ${pathname === '/admin' ? 'text-blue-400 font-bold' : 'text-zinc-300'}`}
+            href='/admin'
+          >
+            Admin
+          </Link>
+
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className={`transition font-medium hover:text-blue-400 ${
-                pathname === item.href ? 'text-blue-400 font-bold' : 'text-zinc-300'
-              }`}
+              className={`transition font-medium hover:text-blue-400 ${pathname === item.href ? 'text-blue-400 font-bold' : 'text-zinc-300'}`}
             >
               {item.name}
             </Link>
           ))}
         </div>
 
-        {/* Mobile Menu Button */}
-        <button
-          className="sm:hidden text-zinc-200 hover:text-blue-400 transition"
-          onClick={toggleMenu}
-          aria-label="Toggle menu"
-        >
-          {menuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+
+        <div className=' flex justify-center items-center space-x-4'>
+
+          <Link
+            className={`transition sm:hidden font-medium hover:text-blue-400 ${pathname === '/admin' ? 'text-blue-400 font-bold' : 'text-zinc-300'}`}
+            href='/admin'
+          >
+            Admin
+          </Link>
+
+          {/* Mobile Menu Button */}
+          <button
+            className="sm:hidden text-zinc-200 hover:text-blue-400 transition"
+            onClick={toggleMenu}
+            aria-label="Toggle menu"
+          >
+            {menuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+
       </div>
 
       {/* Mobile Menu Dropdown */}
@@ -59,9 +77,8 @@ export default function Navbar() {
               key={item.href}
               href={item.href}
               onClick={() => setMenuOpen(false)}
-              className={`block py-2 px-2 rounded transition font-medium hover:bg-zinc-800 hover:text-blue-400 ${
-                pathname === item.href ? 'text-blue-400 font-bold' : 'text-zinc-300'
-              }`}
+              className={`block py-2 px-2 rounded transition font-medium hover:bg-zinc-800 hover:text-blue-400 ${pathname === item.href ? 'text-blue-400 font-bold' : 'text-zinc-300'
+                }`}
             >
               {item.name}
             </Link>
