@@ -118,24 +118,6 @@ export default function Profile() {
           </div>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
           <div className="bg-gray-900 border border-gray-700 rounded-lg p-6 space-y-6 shadow-md">
             {/* Profile Image and Basic Info */}
             <div className="flex flex-wrap items-center gap-5">
@@ -199,21 +181,7 @@ export default function Profile() {
                 </div>
 
 
-
-
-
-
-
-
                 <p className="text-gray-400">{firestoreUser.email}</p>
-
-
-
-
-
-
-
-
 
               </div>
 
