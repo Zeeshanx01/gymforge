@@ -12,6 +12,7 @@ export default function Profile() {
   const [firebaseUser, setFirebaseUser] = useState(null);
   const [firestoreUser, setFirestoreUser] = useState(null);
   const [formData, setFormData] = useState({ name: '', age: '', photoURL: '' });
+  const [editMode, setEditMode] = useState({ name: false, age: false, photoURL: false });
   const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
 
@@ -63,28 +64,26 @@ export default function Profile() {
   };
 
   const handleChange = (e) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = async () => {
-    if (!firebaseUser) return;
+  const toggleEdit = (field) => {
+    if (editMode[field]) {
+      handleSave(field); // save on toggle off
+    }
+    setEditMode((prev) => ({ ...prev, [field]: !prev[field] }));
+  };
 
+  const handleSave = async (field) => {
+    if (!firebaseUser) return;
     setIsSaving(true);
     try {
       const userDocRef = doc(db, 'users', firebaseUser.uid);
-      await updateDoc(userDocRef, {
-        name: formData.name,
-        age: formData.age,
-        photoURL: formData.photoURL
-      });
-      setFirestoreUser((prev) => ({ ...prev, ...formData }));
-      alert('Profile updated!');
+      await updateDoc(userDocRef, { [field]: formData[field] });
+      setFirestoreUser((prev) => ({ ...prev, [field]: formData[field] }));
     } catch (error) {
-      console.error('Error updating profile:', error);
-      alert('Failed to update profile.');
+      console.error(`Error updating ${field}:`, error);
     }
     setIsSaving(false);
   };
@@ -118,30 +117,134 @@ export default function Profile() {
             </button>
           </div>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           <div className="bg-gray-900 border border-gray-700 rounded-lg p-6 space-y-6 shadow-md">
             {/* Profile Image and Basic Info */}
-            <div className="flex items-center gap-5">
-              {firestoreUser.photoURL ? (
-                <Image
-                  src={firestoreUser.photoURL}
-                  alt="Profile"
-                  width={96}
-                  height={96}
-                  className="rounded-full border-2 border-gray-700 shadow"
-                />
-              ) : (
-                <div className="w-24 h-24 rounded-full bg-gray-800 flex items-center justify-center text-sm text-gray-500">
-                  No Photo
-                </div>
-              )}
-              <div>
-                <h2 className="text-2xl font-semibold">{firestoreUser.name || 'No Name'}</h2>
-                <p className="text-gray-400">{firestoreUser.email}</p>
+            <div className="flex flex-wrap items-center gap-5">
+
+
+
+              <div className="flex items-center gap-5">
+                {editMode.photoURL ? (
+                  <>
+                    <input
+                      type="text"
+                      name="photoURL"
+                      value={formData.photoURL}
+                      onChange={handleChange}
+                      className="bg-gray-800 text-white px-3 py-2 rounded-md"
+                    />
+                    <button onClick={() => toggleEdit('photoURL')}>💾</button>
+                  </>
+                ) : (
+                  <>
+                    {firestoreUser.photoURL ? (
+                      <Image
+                        src={firestoreUser.photoURL}
+                        alt="Profile"
+                        width={96}
+                        height={96}
+                        className="rounded-full border-2 border-gray-700 shadow"
+                      />
+                    ) : (
+                      <div className="w-24 h-24 rounded-full bg-gray-800 flex items-center justify-center text-sm text-gray-500">
+                        No Photo
+                      </div>
+                    )}
+                    <button onClick={() => toggleEdit('photoURL')}>✏️</button>
+                  </>
+                )}
               </div>
+
+
+
+              <div className='w-fit'>
+                {/* Name */}
+                <div className="flex items-center gap-2">
+                  {editMode.name ? (
+                    <>
+                      <input
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleChange}
+                        className="bg-gray-800 text-white px-3 py-2 rounded-md"
+                      />
+                      <button onClick={() => toggleEdit('name')}>💾</button>
+                    </>
+                  ) : (
+                    <>
+                      <h2 className="text-2xl font-semibold">{firestoreUser.name || 'No Name'}</h2>
+                      <button onClick={() => toggleEdit('name')}>✏️</button>
+                    </>
+                  )}
+                </div>
+
+
+
+
+
+
+
+
+                <p className="text-gray-400">{firestoreUser.email}</p>
+
+
+
+
+
+
+
+
+
+              </div>
+
+
+
             </div>
 
             {/* Details */}
             <div className="grid sm:grid-cols-2 gap-6">
+              {/* Age */}
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-medium mb-1">Age:</h3>
+                {editMode.age ? (
+                  <>
+                    <input
+                      type="number"
+                      name="age"
+                      value={formData.age}
+                      onChange={handleChange}
+                      className="bg-gray-800 text-white px-3 py-1 rounded-md"
+                    />
+                    <button onClick={() => toggleEdit('age')}>💾</button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-gray-400">{firestoreUser.age || 'N/A'}</p>
+                    <button onClick={() => toggleEdit('age')}>✏️</button>
+                  </>
+                )}
+              </div>
+
               <div>
                 <h3 className="text-lg font-medium mb-1">User ID (UID)</h3>
                 <p className="text-gray-400 break-all">{firebaseUser.uid}</p>
@@ -158,51 +261,30 @@ export default function Profile() {
                 <h3 className="text-lg font-medium mb-1">Account Created</h3>
                 <p className="text-gray-400">{firebaseUser.metadata?.creationTime || 'N/A'}</p>
               </div>
-            </div>
-
-            {/* Editable Form */}
-            <div className="border-t border-gray-700 pt-6">
-              <h3 className="text-xl font-semibold mb-4">Edit Profile</h3>
-              <div className="space-y-4">
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="Your name"
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-white"
-                />
-                <input
-                  type="number"
-                  name="age"
-                  value={formData.age}
-                  onChange={handleChange}
-                  placeholder="Your age"
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-white"
-                />
-                <input
-                  type="text"
-                  name="photoURL"
-                  value={formData.photoURL}
-                  onChange={handleChange}
-                  placeholder="Photo URL"
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-white"
-                />
-                <button
-                  onClick={handleSave}
-                  disabled={isSaving}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-md"
-                >
-                  {isSaving ? 'Saving...' : 'Update Profile'}
-                </button>
+              <div>
+                <h3 className="text-lg font-medium mb-1">Last Sign-in</h3>
+                <p className="text-gray-400">{firebaseUser.metadata?.lastSignInTime || 'N/A'}</p>
               </div>
             </div>
-
-
-
-
-
           </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         </section>
       </main>
     </ProtectedRoute>
