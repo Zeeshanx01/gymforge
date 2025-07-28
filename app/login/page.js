@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth, googleProvider } from '@/lib/firebase';
+import { FacebookAuthProvider } from 'firebase/auth';
+
 import { addUserToFirestore } from '@/lib/addUserToFirestore';
 import { sendEmail } from '@/lib/sendEmail';
 import {
@@ -14,7 +16,7 @@ import {
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
-const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.split(',') || [];
+// const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.split(',') || [];
 
 export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -26,11 +28,29 @@ export default function LoginPage() {
 
   const router = useRouter();
 
+  const facebookProvider = new FacebookAuthProvider();
+
+
+
+  const getUserRole = async (uid) => {
+    const userRef = doc(db, 'users', uid);
+    const userSnap = await getDoc(userRef);
+    return userSnap.exists() ? userSnap.data().role || 'user' : 'user';
+  };
+
+
+
+
+
+
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        const isAdmin = adminEmails.includes(user.email || '');
-        router.push(isAdmin ? '/admin' : '/profile');
+        getUserRole(user.uid).then((role) => {
+          router.push(role === 'admin' ? '/admin' : '/profile');
+        });
+
       } else {
         setCheckingAuth(false);
       }
@@ -38,12 +58,28 @@ export default function LoginPage() {
     return () => unsubscribe();
   }, [router]);
 
+
+
+
+
+
+
+
   const isPasswordStrong = (pass) =>
     pass.length >= 6 && /[A-Z]/.test(pass) && /[a-z]/.test(pass) && /\d/.test(pass);
 
   const handleAuth = async (e) => {
     e.preventDefault();
     setErrorMessage('');
+
+
+
+
+
+
+
+
+
 
     try {
       let userCredential;
@@ -60,8 +96,14 @@ export default function LoginPage() {
         userCredential = await createUserWithEmailAndPassword(auth, email, password);
       }
 
+
+
+
+
+
       const user = userCredential.user;
-      const isAdmin = adminEmails.includes(user.email || '');
+      const role = await getUserRole(user.uid);
+
 
       await addUserToFirestore(user);
 
@@ -72,6 +114,10 @@ export default function LoginPage() {
       const hoursSinceLastLogin = lastLogin
         ? Math.abs(now.getTime() - lastLogin.getTime()) / 36e5
         : Infinity;
+
+
+
+
 
 
       if (isLogin) { // 👈 This will force email every time for testing
@@ -93,8 +139,8 @@ export default function LoginPage() {
       }
 
       await setDoc(userRef, { lastLogin: now }, { merge: true });
+      router.push(role === 'admin' ? '/admin' : '/profile');
 
-      router.push(isAdmin ? '/admin' : '/profile');
     } catch (err) {
       if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
         setErrorMessage('Incorrect email or password.');
@@ -119,8 +165,26 @@ export default function LoginPage() {
       const user = result.user;
 
       await addUserToFirestore(user);
-      const isAdmin = adminEmails.includes(user.email || '');
-      router.push(isAdmin ? '/admin' : '/profile');
+      const role = await getUserRole(user.uid);
+      router.push(role === 'admin' ? '/admin' : '/profile');
+
+    } catch (err) {
+      setErrorMessage(err.message);
+    }
+  };
+
+
+
+  const handleFacebook = async () => {
+    setErrorMessage('');
+    try {
+      const result = await signInWithPopup(auth, facebookProvider);
+      const user = result.user;
+
+      await addUserToFirestore(user);
+      const role = await getUserRole(user.uid);
+      router.push(role === 'admin' ? '/admin' : '/profile');
+
     } catch (err) {
       setErrorMessage(err.message);
     }
@@ -187,6 +251,13 @@ export default function LoginPage() {
           className="w-full py-2 bg-red-600 hover:bg-red-700 rounded font-semibold"
         >
           Continue with Google
+        </button>
+        <button
+          type="button"
+          onClick={handleFacebook}
+          className="w-full py-2 bg-blue-700 hover:bg-blue-800 rounded font-semibold"
+        >
+          Continue with Facebook
         </button>
 
         <p className="text-sm text-center mt-4">

@@ -35,6 +35,8 @@ export default function Navbar() {
     ...(isAdmin ? [{ name: 'Admin', href: '/admin' }] : []),
   ]
 
+  console.log('NAVBAR admin: ', isAdmin,'user: ', isUser)
+
   const handleSignOut = async () => {
     try {
       await signOut(auth)
