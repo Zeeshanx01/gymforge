@@ -11,6 +11,8 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import { FaPencilAlt, FaTrash } from 'react-icons/fa';
+import { IoClose } from 'react-icons/io5';
 
 export default function Profile() {
 
@@ -21,6 +23,8 @@ export default function Profile() {
   const [editMode, setEditMode] = useState({ name: false, age: false });
   const [isSaving, setIsSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const fileInputRef = useRef();
   const router = useRouter();
 
@@ -149,6 +153,19 @@ export default function Profile() {
     setUploading(false);
   };
 
+  // Handle delete image
+  const handleDeleteImage = async () => {
+    if (!firebaseUser) return;
+    try {
+      await updateDoc(doc(db, 'users', firebaseUser.uid), {
+        photoURL: ''
+      });
+      setFirestoreUser((prev) => ({ ...prev, photoURL: '' }));
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Error deleting image:', error);
+    }
+  };
 
   if (!firebaseUser || !firestoreUser) {
     return (
@@ -192,28 +209,34 @@ export default function Profile() {
               <div className="flex items-center gap-5">
 
 
-               {firestoreUser.photoURL ? (
-                <Image
-                  src={firestoreUser.photoURL}
-                  alt="Profile"
-                  width={96}
-                  height={96}
-                  className="rounded-full border-2 border-gray-700 shadow"
-                />
-              ) : (
-                <div className="w-24 h-24 rounded-full bg-gray-800 flex items-center justify-center text-sm text-gray-500">
-                  No Photo
+                <div className="relative group w-24 h-24">
+                  {firestoreUser.photoURL ? (
+                    <>
+                      <Image
+                        src={firestoreUser.photoURL}
+                        alt="Profile"
+                        width={96}
+                        height={96}
+                        className="rounded-full border-2 border-gray-700 shadow cursor-pointer"
+                        onClick={() => setIsModalOpen(true)}
+                      />
+                      <div
+                        className="absolute inset-0 bg-black bg-opacity-40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer"
+                        onClick={() => setIsModalOpen(true)}
+                      >
+                        <FaPencilAlt className="text-white text-lg" />
+                      </div>
+                    </>
+                  ) : (
+                    <div
+                      className="w-24 h-24 rounded-full bg-gray-800 flex items-center justify-center text-sm text-gray-500 cursor-pointer"
+                      onClick={() => setIsModalOpen(true)}
+                    >
+                      No Photo
+                    </div>
+                  )}
                 </div>
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                ref={fileInputRef}
-                onChange={handleImageUpload}
-                className="text-sm"
-              />
-              {uploading && <span className="text-gray-400">Uploading...</span>}
-            
+
 
 
               </div>
@@ -317,6 +340,56 @@ export default function Profile() {
 
         </section>
       </main>
+
+
+
+      {/* Modal for full view */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+          <div className="bg-gray-900 p-4 rounded-md relative max-w-xs w-full text-center">
+            <button
+              className="absolute top-2 right-2 text-gray-400 hover:text-white"
+              onClick={() => setIsModalOpen(false)}
+            >
+              <IoClose size={20} />
+            </button>
+            {firestoreUser.photoURL ? (
+              <Image
+                src={firestoreUser.photoURL}
+                alt="Full Profile"
+                width={300}
+                height={300}
+                className="rounded-md mx-auto"
+              />
+            ) : (
+              <div className="w-60 h-60 bg-gray-800 flex items-center justify-center text-gray-500 mx-auto rounded-md">
+                No Photo
+              </div>
+            )}
+            <div className="flex gap-3 mt-4 justify-center">
+              <label className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md cursor-pointer">
+                Edit
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+              </label>
+              <button
+                onClick={handleDeleteImage}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md flex items-center gap-1"
+              >
+                <FaTrash /> Delete
+              </button>
+            </div>
+            {uploading && <p className="text-gray-400 mt-2">Uploading...</p>}
+          </div>
+        </div>
+      )}
+
+
     </ProtectedRoute>
   );
 }
