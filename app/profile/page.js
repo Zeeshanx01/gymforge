@@ -1,6 +1,10 @@
-'use client'
+// app/profile/page.js
 
-import { useEffect, useState } from 'react';
+'use client'
+// This page displays the user's profile information and allows them to edit their details.
+// It also includes functionality for uploading an avatar image.
+
+import { useEffect, useState, useRef } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
@@ -9,13 +13,21 @@ import Image from 'next/image';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function Profile() {
+
+  // State variables
   const [firebaseUser, setFirebaseUser] = useState(null);
   const [firestoreUser, setFirestoreUser] = useState(null);
-  const [formData, setFormData] = useState({ name: '', age: '', photoURL: '' });
-  const [editMode, setEditMode] = useState({ name: false, age: false, photoURL: false });
+  const [formData, setFormData] = useState({ name: '', age: '' });
+  const [editMode, setEditMode] = useState({ name: false, age: false });
   const [isSaving, setIsSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef();
   const router = useRouter();
 
+
+
+
+  // Listen for Firebase auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -26,10 +38,13 @@ export default function Profile() {
         setFirestoreUser(null);
       }
     });
-
     return () => unsubscribe();
   }, []);
 
+
+
+
+  // Fetch user data from Firestore when firebaseUser changes
   useEffect(() => {
     const fetchUserData = async () => {
       if (!firebaseUser) return;
@@ -42,8 +57,7 @@ export default function Profile() {
           setFirestoreUser(data);
           setFormData({
             name: data.name || '',
-            age: data.age || '',
-            photoURL: data.photoURL || ''
+            age: data.age || ''
           });
         }
       } catch (err) {
@@ -54,6 +68,9 @@ export default function Profile() {
     fetchUserData();
   }, [firebaseUser]);
 
+
+
+  // Handle user logout
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -63,11 +80,16 @@ export default function Profile() {
     }
   };
 
+
+  // Handle input changes for form fields
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+
+
+  // Toggle edit mode for a field
   const toggleEdit = (field) => {
     if (editMode[field]) {
       handleSave(field); // save on toggle off
@@ -75,6 +97,9 @@ export default function Profile() {
     setEditMode((prev) => ({ ...prev, [field]: !prev[field] }));
   };
 
+
+
+  // Handle saving changes to Firestore
   const handleSave = async (field) => {
     if (!firebaseUser) return;
     setIsSaving(true);
@@ -87,6 +112,43 @@ export default function Profile() {
     }
     setIsSaving(false);
   };
+
+
+
+
+
+
+
+
+
+
+
+  // Handle image upload
+  const handleImageUpload = async (e) => {
+    if (!firebaseUser || !e.target.files[0]) return;
+    setUploading(true);
+
+    const file = e.target.files[0];
+    try {
+      const res = await fetch('/api/avatar/upload', {
+        method: 'POST',
+        headers: { 'x-filename': file.name },
+        body: file,
+      });
+      const blob = await res.json();
+
+      // Save URL to Firestore
+      await updateDoc(doc(db, 'users', firebaseUser.uid), {
+        photoURL: blob.url,
+      });
+
+      setFirestoreUser((prev) => ({ ...prev, photoURL: blob.url }));
+    } catch (error) {
+      console.error('Error uploading image:', error);
+    }
+    setUploading(false);
+  };
+
 
   if (!firebaseUser || !firestoreUser) {
     return (
@@ -119,41 +181,41 @@ export default function Profile() {
 
 
           <div className="bg-gray-900 border border-gray-700 rounded-lg p-6 space-y-6 shadow-md">
+
+
+
             {/* Profile Image and Basic Info */}
             <div className="flex flex-wrap items-center gap-5">
 
 
 
               <div className="flex items-center gap-5">
-                {editMode.photoURL ? (
-                  <>
-                    <input
-                      type="text"
-                      name="photoURL"
-                      value={formData.photoURL}
-                      onChange={handleChange}
-                      className="bg-gray-800 text-white px-3 py-2 rounded-md"
-                    />
-                    <button onClick={() => toggleEdit('photoURL')}>💾</button>
-                  </>
-                ) : (
-                  <>
-                    {firestoreUser.photoURL ? (
-                      <Image
-                        src={firestoreUser.photoURL}
-                        alt="Profile"
-                        width={96}
-                        height={96}
-                        className="rounded-full border-2 border-gray-700 shadow"
-                      />
-                    ) : (
-                      <div className="w-24 h-24 rounded-full bg-gray-800 flex items-center justify-center text-sm text-gray-500">
-                        No Photo
-                      </div>
-                    )}
-                    <button onClick={() => toggleEdit('photoURL')}>✏️</button>
-                  </>
-                )}
+
+
+               {firestoreUser.photoURL ? (
+                <Image
+                  src={firestoreUser.photoURL}
+                  alt="Profile"
+                  width={96}
+                  height={96}
+                  className="rounded-full border-2 border-gray-700 shadow"
+                />
+              ) : (
+                <div className="w-24 h-24 rounded-full bg-gray-800 flex items-center justify-center text-sm text-gray-500">
+                  No Photo
+                </div>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                onChange={handleImageUpload}
+                className="text-sm"
+              />
+              {uploading && <span className="text-gray-400">Uploading...</span>}
+            
+
+
               </div>
 
 
